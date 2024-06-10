@@ -1,3 +1,4 @@
+# interface.py
 import time
 import threading
 import random
@@ -82,26 +83,3 @@ class RFIDInterface:
         rfid = f"{random.randint(230855203, 230865498):012d}"  # Generate a random RFID
         self.current_rfid = rfid
         self.callback(rfid)
-
-class TTLInterface:
-    def __init__(self, callback):
-        self.callback = callback
-        self.running = False
-
-    def start(self):
-        self.running = True
-        self.thread = threading.Thread(target=self.read_ttl_signals)
-        self.thread.start()
-
-    def stop(self):
-        self.running = False
-        if self.thread:
-            self.thread.join()
-
-    def read_ttl_signals(self):
-        while self.running:
-            # Simulate TTL signal reading
-            time.sleep(1)  # Replace with actual signal detection logic
-            signal = True  # This should be the actual signal read
-            if signal:
-                self.callback()

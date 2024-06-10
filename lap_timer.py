@@ -1,6 +1,6 @@
+# lap_timer.py
 import time
 import csv
-from interface import TTLInterface
 
 LAP_LOG = "lap_times.csv"
 lap_times = []
