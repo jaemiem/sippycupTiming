@@ -2,39 +2,43 @@ import time
 import threading
 import random
 import csv
+import streamlit as st
 
-RFID_DB = "rfid_db.csv"
+DATABASE = "rfid_database.csv"
 
-def load_rfids():
-    rfids = set()
+def load_database():
+    data = {}
     try:
-        with open(RFID_DB, mode='r') as file:
+        with open(DATABASE, mode='r') as file:
             reader = csv.reader(file)
             for row in reader:
-                rfids.add(row[0])
+                rfid = row[0]
+                data[rfid] = {
+                    "Driver Name": row[1],
+                    "Driver Number": row[2],
+                    "Driver Kart": row[3],
+                    "Driver Kart CC": row[4]
+                }
     except FileNotFoundError:
-        pass
-    return rfids
+        st.error("Database file not found.")
+    except Exception as e:
+        st.error(f"Error reading database: {e}")
+    return data
 
-def save_rfid(rfid):
-    with open(RFID_DB, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([rfid])
-
-def remove_rfid(rfid):
-    rfids = load_rfids()
-    if rfid in rfids:
-        rfids.remove(rfid)
-        with open(RFID_DB, mode='w', newline='') as file:
+def save_database(data):
+    try:
+        with open(DATABASE, mode='w', newline='') as file:
             writer = csv.writer(file)
-            for r in rfids:
-                writer.writerow([r])
+            for rfid, details in data.items():
+                writer.writerow([rfid, details["Driver Name"], details["Driver Number"], details["Driver Kart"], details["Driver Kart CC"]])
+    except Exception as e:
+        st.error(f"Error saving to database: {e}")
 
 class RFIDInterface:
     def __init__(self, callback):
         self.callback = callback
         self.running = False
-        self.detected_rfids = load_rfids()
+        self.data = load_database()
         self.current_rfid = None
 
     def start(self):
@@ -51,28 +55,33 @@ class RFIDInterface:
         while self.running:
             # Simulate RFID signal reading
             time.sleep(3)  # Replace with actual signal detection logic
-            rfid = f"{random.randint(1000000000, 9999999999)}"  # Simulated RFID
+            rfid = f"{random.randint(230855203, 230865498):012d}"  # Simulated RFID
             self.current_rfid = rfid
             self.callback(rfid)
 
     def add_rfid(self, rfid):
-        if rfid not in self.detected_rfids:
-            self.detected_rfids.add(rfid)
-            save_rfid(rfid)
+        if rfid not in self.data:
+            self.data[rfid] = {
+                "Driver Name": "Not Assigned",
+                "Driver Number": "Not Assigned",
+                "Driver Kart": "Not Assigned",
+                "Driver Kart CC": "Not Assigned"
+            }
+            save_database(self.data)
 
     def remove_rfid(self, rfid):
-        if rfid in self.detected_rfids:
-            self.detected_rfids.remove(rfid)
-            remove_rfid(rfid)
+        if rfid in self.data:
+            del self.data[rfid]
+            save_database(self.data)
 
     def get_detected_rfids(self):
-        return self.detected_rfids
+        return self.data.keys()
 
     # Method to simulate RFID detection for test purposes
-    def simulate_rfid_detection(self, rfid):
-        if rfid not in self.detected_rfids:
-            self.detected_rfids.add(rfid)
-            self.callback(rfid)
+    def simulate_rfid_detection(self):
+        rfid = f"{random.randint(230855203, 230865498):012d}"  # Generate a random RFID
+        self.current_rfid = rfid
+        self.callback(rfid)
 
 class TTLInterface:
     def __init__(self, callback):
@@ -93,29 +102,6 @@ class TTLInterface:
         while self.running:
             # Simulate TTL signal reading
             time.sleep(1)  # Replace with actual signal detection logic
-            signal = True  # This should be the actual signal read
-            if signal:
-                self.callback()
-
-class SerialInterface:
-    def __init__(self, callback):
-        self.callback = callback
-        self.running = False
-
-    def start(self):
-        self.running = True
-        self.thread = threading.Thread(target=self.read_serial_signals)
-        self.thread.start()
-
-    def stop(self):
-        self.running = False
-        if self.thread:
-            self.thread.join()
-
-    def read_serial_signals(self):
-        while self.running:
-            # Simulate Serial signal reading
-            time.sleep(2)  # Replace with actual signal detection logic
             signal = True  # This should be the actual signal read
             if signal:
                 self.callback()

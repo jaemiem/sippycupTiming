@@ -1,0 +1,39 @@
+.rfid-table {
+    width: 60%; /* Adjust this width as necessary */
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse; /* Ensure borders collapse into a single border */
+}
+
+.rfid-table th, .rfid-table td {
+    padding: 8px 16px;
+    text-align: left;
+    white-space: nowrap; /* Ensure text doesn't wrap */
+    border: 1px solid #ddd; /* Add border for better visibility */
+}
+
+.rfid-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.rfid-table th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.rfid-table td {
+    text-align: left;
+}
+
+.rfid-table .rfid-column {
+    width: 40%;
+}
+
+.rfid-table .name-column {
+    width: 40%;
+}
+
+.rfid-table .action-column {
+    width: 20%;
+    text-align: center;
+}

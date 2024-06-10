@@ -1,6 +1,6 @@
 import time
 import csv
-from interface import TTLInterface  # Ensure this line is correct
+from interface import TTLInterface
 
 LAP_LOG = "lap_times.csv"
 lap_times = []
