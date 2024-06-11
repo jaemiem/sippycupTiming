@@ -31,7 +31,8 @@ def restart_ttl_interface():
     if 'selected_com_port' in st.session_state:
         init_ttl_interface(st.session_state.selected_com_port)
 
-# Streamlit page definition
+# interface_page.py
+
 def interface_page():
     st.title("Interface")
     input_mode = st.selectbox("Select Input Mode", ["TTL", "RFID Test"])
@@ -91,20 +92,10 @@ def interface_page():
                         data_display.write("Received Data:")
                         data_display.code('\n'.join(st.session_state.captured_log))
                 time.sleep(0.5)
-
-        elif input_mode == "RFID Test":
-            while st.session_state.listening:
-                if st.session_state.rfid_interface.current_rfid:
-                    if st.session_state.rfid_interface.current_rfid not in st.session_state.detected_ids:
-                        st.session_state.detected_ids.add(st.session_state.rfid_interface.current_rfid)
-                        # Add to log
-                        st.session_state.captured_log.append(st.session_state.rfid_interface.current_rfid)
-                        data_display.write(f"Detected RFID: {st.session_state.rfid_interface.current_rfid}")
-                        if st.button("Add Detected RFID to Database"):
-                            st.session_state.rfid_interface.add_rfid(st.session_state.rfid_interface.current_rfid)
-                            st.success(f"RFID {st.session_state.rfid_interface.current_rfid} added to the database.")
-                            st.session_state.mock_rfid = None
-                time.sleep(0.5)
+        else:
+            if st.session_state.ttl_interface and st.session_state.ttl_interface.is_active():
+                st.session_state.ttl_interface.stop()
+                st.session_state.ttl_interface_active = False
 
     st.header("RFID Database")
     data = load_database()
@@ -119,22 +110,16 @@ def interface_page():
         })
 
     if rfid_table:
-        # Read the CSS file
-        with open("styles.css") as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
         st.write("RFID Database:")
-        st.write("""
-            <table class="rfid-table">
-                <thead>
-                    <tr>
-                        <th>RFID</th>
-                        <th>Driver Name</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-        """, unsafe_allow_html=True)
+        st.write("""<table class="rfid-table">
+                        <thead>
+                            <tr>
+                                <th>RFID</th>
+                                <th>Driver Name</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>""", unsafe_allow_html=True)
 
         for entry in rfid_table:
             col1, col2, col3 = st.columns([4, 4, 1])
@@ -147,16 +132,7 @@ def interface_page():
                     st.session_state.rfid_interface.remove_rfid(entry["RFID"])
                     st.experimental_rerun()
 
-        st.write("""
-                </tbody>
-            </table>
-        """, unsafe_allow_html=True)
+        st.write("""</tbody>
+                    </table>""", unsafe_allow_html=True)
     else:
         st.write("No RFIDs detected.")
-
-# Ensure RFIDInterface and TTLInterface classes are properly defined and imported
-# Ensure the lap_detected function is properly defined and imported
-
-# Entry point to the Streamlit app
-if __name__ == "__main__":
-    interface_page()

@@ -3,6 +3,8 @@ import threading
 import serial  # Assuming you're using the pyserial library
 from serial import SerialException
 
+# ttl_interface.py
+
 class TTLInterface:
     def __init__(self, callback, com_port):
         self.callback = callback
@@ -40,3 +42,6 @@ class TTLInterface:
 
     def get_received_data(self):
         return self.received_data
+
+    def is_active(self):
+        return self.running
