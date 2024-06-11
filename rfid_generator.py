@@ -1,4 +1,3 @@
-# interface.py
 import time
 import threading
 import random
@@ -83,3 +82,6 @@ class RFIDInterface:
         rfid = f"{random.randint(230855203, 230865498):012d}"  # Generate a random RFID
         self.current_rfid = rfid
         self.callback(rfid)
+        if 'detected_ids' not in st.session_state:
+            st.session_state.detected_ids = set()
+        st.session_state.detected_ids.add(rfid)

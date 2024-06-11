@@ -1,4 +1,3 @@
-# driver_setup.py
 import streamlit as st
 import pandas as pd
 import csv
@@ -6,30 +5,18 @@ import csv
 DATABASE = "rfid_database.csv"
 
 def load_database():
-    data = {}
     try:
-        with open(DATABASE, mode='r') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                rfid = row[0]
-                data[rfid] = {
-                    "Driver Name": row[1],
-                    "Driver Number": row[2],
-                    "Driver Kart": row[3],
-                    "Driver Kart CC": row[4]
-                }
+        df = pd.read_csv(DATABASE)
+        if df.empty:
+            df = pd.DataFrame(columns=["RFID", "Driver Name", "Driver Number", "Driver Kart", "Driver Kart CC"])
     except FileNotFoundError:
-        st.error("Database file not found.")
-    except Exception as e:
-        st.error(f"Error reading database: {e}")
-    return data
+        df = pd.DataFrame(columns=["RFID", "Driver Name", "Driver Number", "Driver Kart", "Driver Kart CC"])
+    return df
 
 def save_database(data):
     try:
-        with open(DATABASE, mode='w', newline='') as file:
-            writer = csv.writer(file)
-            for rfid, details in data.items():
-                writer.writerow([rfid, details["Driver Name"], details["Driver Number"], details["Driver Kart"], details["Driver Kart CC"]])
+        data.to_csv(DATABASE, index=False)
+        st.success("Database saved successfully.")
     except Exception as e:
         st.error(f"Error saving to database: {e}")
 
@@ -37,16 +24,27 @@ def driver_setup_page(rfid_interface):
     st.title("Driver Setup")
 
     data = load_database()
+
+    # Ensure the first row (header) is ignored
+    data = data.reset_index(drop=True)
+    if not data.empty and data.iloc[0].isnull().all():
+        data = data.drop(data.index[0])
+
     detected_rfids = rfid_interface.get_detected_rfids()
 
     rfid_table = []
     for rfid in detected_rfids:
-        details = data.get(rfid, {
-            "Driver Name": "Not Assigned",
-            "Driver Number": "Not Assigned",
-            "Driver Kart": "Not Assigned",
-            "Driver Kart CC": "Not Assigned"
-        })
+        details = data[data["RFID"] == rfid]
+        if details.empty:
+            details = {
+                "Driver Name": "Not Assigned",
+                "Driver Number": "Not Assigned",
+                "Driver Kart": "Not Assigned",
+                "Driver Kart CC": "Not Assigned"
+            }
+        else:
+            details = details.iloc[0].to_dict()
+        
         rfid_table.append({
             "RFID": rfid,
             "Driver Name": details["Driver Name"],
@@ -56,12 +54,7 @@ def driver_setup_page(rfid_interface):
         })
 
     if rfid_table:
-        df = pd.DataFrame(rfid_table)
-
-        st.write("RFID Database:")
-        st.table(df)
-
-        for index, row in df.iterrows():
+        for row in rfid_table:
             if st.session_state.get(f'edit_{row["RFID"]}', False):
                 col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
                 with col1:
@@ -76,12 +69,7 @@ def driver_setup_page(rfid_interface):
                     new_kart_cc = st.selectbox("Driver Kart CC", ["100cc", "125cc", "150cc"], key=f"kart_cc_{row['RFID']}")
                 with col6:
                     if st.button("Save", key=f"save_{row['RFID']}"):
-                        data[row["RFID"]] = {
-                            "Driver Name": new_name,
-                            "Driver Number": new_number,
-                            "Driver Kart": new_kart,
-                            "Driver Kart CC": new_kart_cc
-                        }
+                        data.loc[data["RFID"] == row["RFID"], ["Driver Name", "Driver Number", "Driver Kart", "Driver Kart CC"]] = [new_name, new_number, new_kart, new_kart_cc]
                         save_database(data)
                         st.success(f"Driver {new_name} with RFID {row['RFID']} updated.")
                         st.session_state[f'edit_{row["RFID"]}'] = False

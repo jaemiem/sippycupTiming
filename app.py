@@ -1,4 +1,3 @@
-# app.py
 import subprocess
 import sys
 import streamlit as st
@@ -8,7 +7,7 @@ from driver_setup import driver_setup_page
 from interface_page import interface_page
 from terminal_page import terminal_page
 from rfid_generator import RFIDInterface  # Updated import
-from ttl_interface import TTLInterface  # Import from the new module
+from lap_timer import lap_timer_page  # Import the lap timer page function
 
 # Function to install packages
 def install_package(package):
@@ -52,8 +51,8 @@ if 'mock_rfid' not in st.session_state:
 with st.sidebar:
     page = option_menu(
         "Navigation",
-        ["Dashboard", "Driver Setup", "Interface", "Terminal"],
-        icons=["house", "gear", "antenna", "terminal"],
+        ["Dashboard", "Driver Setup", "Interface", "Lap Timer", "Terminal"],
+        icons=["house", "gear", "antenna", "clock", "terminal"],
         menu_icon="cast",
         default_index=0,
     )
@@ -65,5 +64,7 @@ elif page == "Driver Setup":
     driver_setup_page(st.session_state.rfid_interface)
 elif page == "Interface":
     interface_page()
+elif page == "Lap Timer":
+    lap_timer_page()
 elif page == "Terminal":
     terminal_page()

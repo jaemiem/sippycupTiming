@@ -3,12 +3,11 @@ import threading
 import serial  # Assuming you're using the pyserial library
 from serial import SerialException
 
-# ttl_interface.py
-
 class TTLInterface:
-    def __init__(self, callback, com_port):
+    def __init__(self, callback, com_port, baud_rate=9600):
         self.callback = callback
         self.com_port = com_port
+        self.baud_rate = baud_rate
         self.running = False
         self.serial_conn = None
         self.received_data = []
@@ -16,7 +15,7 @@ class TTLInterface:
     def start(self):
         self.running = True
         try:
-            self.serial_conn = serial.Serial(self.com_port, 9600, timeout=1)  # Set the appropriate baud rate
+            self.serial_conn = serial.Serial(self.com_port, self.baud_rate, timeout=1)  # Set the appropriate baud rate
             self.thread = threading.Thread(target=self.read_ttl_signals)
             self.thread.start()
         except SerialException as e:
